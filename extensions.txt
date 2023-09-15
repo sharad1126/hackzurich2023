@@ -1,18 +1,29 @@
- csv
- db 
- docx
- html
- img
- log
- md 
- mp3
- msg
- pdf
- pem
- ps1
- pub
- py 
- txt
- xlsx
- xml
- zip
+data:
+db 
+xml
+html
+
+table: 
+xlsx
+csv
+
+media:
+img
+mp3
+
+text: 
+docx
+pdf
+text
+md 
+ps1
+py 
+msg
+log
+
+key:
+pem
+pub
+
+special:
+zip
