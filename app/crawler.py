@@ -18,14 +18,10 @@ things are satisfied:
 - Your code cannot the internet during evaluation. Design accordingly.
 """
 
-import os
-from pathlib import Path
 import pickle
-import spacy
-import re
+from app.ner import ner
 from convertion.txt import *
 from convertion.tabular import *
-import ner
 
 chunk_size = 1000000
 
@@ -38,17 +34,21 @@ ner_categories = {
 
 
 def classification_rule(labels):
-    if 'RSA_PRIVATE_KEY' in labels:
-        return True
+    sensitive_combinations = [
+        {'RSA_PRIVATE_KEY'},
+        {'PERSON', 'EMAIL'},
+        {'PERSON', 'IBAN'},
+        {'PERSON', 'PHONE'},
+        {'PERSON', 'ADDRESS'},
+        {'IBAN', 'EMAIL'},
+        {'EMAIL', 'ADDRESS'},
+        {'EMAIL', 'PHONE'},
+        {'EMAIL', 'IBAN'}
+    ]
 
-    n_direct = len(set(labels).intersection(ner_categories['direct']))
-    n_indirect = len(set(labels).intersection(ner_categories['indirect']))
-    n_potential_indirect = len(set(labels).intersection(ner_categories['potential_indirect']))
-
-    if n_direct >= 2:
-        return True
-    if n_direct > 0 and (n_indirect > 0 or n_potential_indirect > 0):
-        return True
+    for combination in sensitive_combinations:
+        if combination.issubset(set(labels)):
+            return True
 
     return False
 
@@ -59,39 +59,42 @@ def save_dict_as_pickle(labels, filename):
 
 
 def classifier(file_path):
-    # Check the data type
-    if file_path.suffix == ".txt":
-        # Open the file to read out the content
-        with open(file_path, encoding="utf8") as f:
-            while True:
-                chunk = f.read(chunk_size)
-                if not chunk: break
-                print(ner(chunk))
-                if file_content.find("hello") != -1:
-                    return "True"
-                else:
-                    return "False"
-    else:
-        # If it is not a `.txt` file the set the label to "reviewpkl"
-        return "review"
+    with open(file_path, encoding="utf8") as f:
+        while True:
+            chunk = f.read(chunk_size)
+
+            if not chunk:
+                break
+
+            label_tokens = ner(chunk)
+            print(label_tokens)
+            class_out = classification_rule([label for (_, _, _, label) in label_tokens])
+
+            # TODO review
+
+            return "True" if class_out else "False"
+
 
 def preprocess(file_path: str, output_dir: str):
     file_extension = Path(file_path).suffix.lower()
     try:
         if file_extension == ".docx":
-            convert_docx_to_txt(input_file, output_dir)
+            return convert_docx_to_txt(file_path, output_dir)
         elif file_extension == ".pdf":
-            convert_pdf_to_txt(input_file, output_dir)
+            return convert_pdf_to_txt(file_path, output_dir)
         elif file_extension == ".msg":
-            convert_msg_to_txt(input_file, output_dir)
+            return convert_msg_to_txt(file_path, output_dir)
         elif file_extension == ".xlsx":
-            convert_from_excel_to_csv(input_file, output_dir)
+            return convert_from_excel_to_csv(file_path, output_dir)
         elif file_extension == ".db":
-            convert_from_db_to_csv(input_file, output_dir)
+            return convert_from_db_to_csv(file_path, output_dir)
         elif file_extension == ".csv":
-            convert_other_to_csv(input_file, output_dir)
+            return convert_other_to_csv(file_path, output_dir)
+        elif file_extension == ".log":
+            return convert_other_to_txt(file_path, output_dir)
     except Exception as e:
         print(f"Could not preprocess {file_path} - {e}")
+
 
 def main():
     # Get the path of the directory where this script is in
@@ -106,88 +109,20 @@ def main():
         # Create new directory for preproccesed files if it does not exist
         preprocessed_dir = script_dir_path / "preprocessed"
         if not os.path.exists(preprocessed_dir):
-            os.mkdir(preprocessed_dir) 
+            os.mkdir(preprocessed_dir)
 
         # Loop over all items in the file directory.
         # Do Preprocessing and save in preprocessed directory
         for file_name in os.listdir(file_dir_path):
             # TODO: Check if it does not have an extension
-            preprocess(file_name, preprocessed_dir)
+            preprocessed_path = preprocess(file_dir_path / file_name, preprocessed_dir)
+            classifier(preprocessed_path)
 
-        # Loop over all items in the file directory
-        for file_name in os.listdir(preprocessed_dir):
-            file_path = file_dir_path / file_namepkl
         # Save the label dictionary as a Pickle file
         save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
     else:
         print("Please place the files in the corresponding folder")
 
 
-def ner___(text):
-    nlp = spacy.load("en_core_web_sm")
-
-    patterns = {
-        'EMAIL': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
-        'PHONE': r'(?:(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',
-        'IBAN': r'\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b',
-        'GENDER': r'\b(male|female)\b',
-        'RSA_PRIVATE_KEY': r'-----BEGIN RSA PRIVATE KEY-----[\s\S]+?-----END RSA PRIVATE KEY-----'
-    }
-
-    # text = 'Please contact support@example.com for assistance.'
-    # text = 'John,Doe,John Doe,john.doe@gmail.com,Apple Inc.,CH0214047068029644243,42nd street NYC USA,+36(12)1234567,American,male,45,software engineer'
-    doc = nlp(text)
-
-    identified_labels = set([ent.label_ for ent in doc.ents])
-
-    # for ent in doc.ents:
-    #     print(ent.text, ent.start_char, ent.end_char, ent.label_)
-
-    for tag, pattern in patterns.items():
-        if len(re.findall(pattern, text)) != 0:
-            identified_labels.add(tag)
-
-        # for match in re.finditer(pattern, text):
-        #     start_index = match.start()
-        #     end_index = match.end()
-        #     matched_text = match.group()
-        #     print(matched_text, start_index, end_index, tag)
-
-    print(identified_labels)
-
-
 if __name__ == "__main__":
     main()
-
-# def test():
-#     import spacy
-#     import re
-# 
-#     nlp = spacy.load("en_core_web_sm")
-# 
-#     patterns = {
-#         'email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
-#         'phone': r'(?:(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',
-#         'iban': r'\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b',
-#         'gender': r'\b(male|female)\b',
-#         'rsa_private_key': r'-----BEGIN RSA PRIVATE KEY-----[\s\S]+?-----END RSA PRIVATE KEY-----'
-#     }
-# 
-#     text = 'Please contact support@example.com for assistance.'
-#     text = 'John,Doe,John Doe,john.doe@gmail.com,Apple Inc.,CH0214047068029644243,42nd street NYC USA,+36(12)1234567,American,male,45,software engineer'
-#     doc = nlp(text)
-# 
-#     for tag, pattern in patterns.items():
-#         for match in re.finditer(pattern, text):
-#             start_index = match.start()
-#             end_index = match.end()
-#             matched_text = match.group()
-#             print(matched_text, start_index, end_index, tag)
-# 
-#     for ent in doc.ents:
-#         print(ent.text, ent.start_char, ent.end_char, ent.label_)
-# 
-# 
-# if __name__ == "__main__":
-#     test()
-#     main()

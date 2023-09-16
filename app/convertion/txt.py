@@ -19,6 +19,8 @@ def convert_docx_to_txt(input_file: str, output_dir: str):
         for paragraph in doc.paragraphs:
             txt_file.write(remove_non_printable(paragraph.text) + "\n")
 
+    return output_path
+
 def convert_pdf_to_txt(input_file: str, output_dir: str):
     file_name = Path(input_file).stem
     doc = fitz.open(input_file)
@@ -29,6 +31,8 @@ def convert_pdf_to_txt(input_file: str, output_dir: str):
             page = doc.load_page(page_number)
             text = page.get_text("block")
             txt_file.write(text)
+
+    return output_path
             
 def convert_msg_to_txt(input_file: str, output_dir: str):
     attachments = Message(input_file).attachments
@@ -58,6 +62,8 @@ def convert_msg_to_txt(input_file: str, output_dir: str):
             if msg.body:
                 txt_file.write(f"{msg.body}\n")
 
+        return output_file
+
     except Exception as e:
         print(f"Error processing {input_file}: {str(e)}")
         
@@ -65,6 +71,7 @@ def convert_other_to_txt(input_file: str, output_dir: str):
     file_name = Path(input_file).stem
     output_path = Path(output_dir) / (file_name + ".txt")
     copyfile(input_file, output_path)
+    return output_path
 
 def main():
     if len(sys.argv) != 3:
