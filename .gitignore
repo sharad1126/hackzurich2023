@@ -1,3 +1,7 @@
+#OSX
+.DS_Store
+*.swp
+
 # Custom ignores
 crawler_labels.pkl
 
