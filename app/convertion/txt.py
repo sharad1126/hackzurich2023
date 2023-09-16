@@ -31,8 +31,36 @@ def convert_pdf_to_txt(input_file: str, output_dir: str):
             txt_file.write(text)
             
 def convert_msg_to_txt(input_file: str, output_dir: str):
-    pass
+    attachments = Message(input_file).attachments
 
+    if attachments:
+        raise Exception(f"{input_file} has {len(attachments)} attachment(s)")
+
+    try:
+        msg = Message(input_file)
+
+        # Construct the output file path
+        base_name = os.path.basename(input_file)
+        output_file = os.path.join(output_dir, os.path.splitext(base_name)[0] + ".txt")
+
+        with open(output_file, "w") as txt_file:
+            if msg.sender:
+                txt_file.write(f"From: {msg.sender}\n")
+
+            if msg.recipients:
+                # Extract email addresses from recipient objects
+                recipients_str = ', '.join([recipient.formatted for recipient in msg.recipients])
+                txt_file.write(f"To: {recipients_str}\n")
+
+            if msg.subject:
+                txt_file.write(f"Subject: {msg.subject}\n")
+
+            if msg.body:
+                txt_file.write(f"{msg.body}\n")
+
+    except Exception as e:
+        print(f"Error processing {input_file}: {str(e)}")
+        
 def convert_other_to_txt(input_file: str, output_dir: str):
     file_name = Path(input_file).stem
     output_path = Path(output_dir) / (file_name + ".txt")
@@ -52,6 +80,8 @@ def main():
         convert_docx_to_txt(input_file, output_dir)
     elif file_extension == ".pdf":
         convert_pdf_to_txt(input_file, output_dir)
+    elif file_extension == ".msg":
+        convert_msg_to_txt(input_file, output_dir)
     else:
         convert_other_to_txt(input_file, output_dir)
 
