@@ -65,5 +65,35 @@ def main():
         print("Please place the files in the corresponding folder")
 
 
+def test():
+    import spacy
+    import re
+
+    nlp = spacy.load("en_core_web_sm")
+
+    patterns = {
+        'email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
+        'phone': r'(?:(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',
+        'iban': r'\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b',
+        'gender': r'\b(male|female)\b',
+        'rsa_private_key': r'-----BEGIN RSA PRIVATE KEY-----[\s\S]+?-----END RSA PRIVATE KEY-----'
+    }
+
+    text = 'Please contact support@example.com for assistance.'
+    text = 'John,Doe,John Doe,john.doe@gmail.com,Apple Inc.,CH0214047068029644243,42nd street NYC USA,+36(12)1234567,American,male,45,software engineer'
+    doc = nlp(text)
+
+    for tag, pattern in patterns.items():
+        for match in re.finditer(pattern, text):
+            start_index = match.start()
+            end_index = match.end()
+            matched_text = match.group()
+            print(matched_text, start_index, end_index, tag)
+
+    for ent in doc.ents:
+        print(ent.text, ent.start_char, ent.end_char, ent.label_)
+
+
 if __name__ == "__main__":
+    test()
     main()
