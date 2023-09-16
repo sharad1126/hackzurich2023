@@ -28,7 +28,7 @@ def convert_from_db_to_csv(input_file: str, output_dir: str):
 
 def convert_other_to_csv(input_file: str, output_dir: str):
     file_name = Path(input_file).stem
-    output_path = Path(output_dir) / (file_name + ".txt")
+    output_path = Path(output_dir) / (file_name + ".csv")
     copyfile(input_file, output_path)
 
 def main():
