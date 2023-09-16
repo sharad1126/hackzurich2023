@@ -40,10 +40,9 @@ def classification_rule(labels):
         {'PERSON', 'IBAN'},
         {'PERSON', 'PHONE'},
         {'PERSON', 'ADDRESS'},
-        {'IBAN', 'EMAIL'},
+        {'EMAIL', 'IBAN'},
         {'EMAIL', 'ADDRESS'},
-        {'EMAIL', 'PHONE'},
-        {'EMAIL', 'IBAN'}
+        {'EMAIL', 'PHONE'}
     ]
 
     for combination in sensitive_combinations:
