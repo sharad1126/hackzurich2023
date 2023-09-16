@@ -21,6 +21,35 @@ things are satisfied:
 import os
 from pathlib import Path
 import pickle
+import spacy
+import re
+
+from app.ner import ner
+
+chunk_size = 1000000
+
+
+ner_categories = {
+    'direct': {'PERSON', 'EMAIL', 'ORG', 'RSA_PRIVATE_KEY'},
+    'indirect': {'', 'PHONE', 'IBAN'},
+    'potential_indirect': {'GENDER'}
+}
+
+
+def classification_rule(labels):
+    if 'RSA_PRIVATE_KEY' in labels:
+        return True
+
+    n_direct = len(set(labels).intersection(ner_categories['direct']))
+    n_indirect = len(set(labels).intersection(ner_categories['indirect']))
+    n_potential_indirect = len(set(labels).intersection(ner_categories['potential_indirect']))
+
+    if n_direct >= 2:
+        return True
+    if n_direct > 0 and (n_indirect > 0 or n_potential_indirect > 0):
+        return True
+
+    return False
 
 
 def save_dict_as_pickle(labels, filename):
@@ -32,13 +61,15 @@ def classifier(file_path):
     # Check the data type
     if file_path.suffix == ".txt":
         # Open the file to read out the content
-        with open(file_path) as f:
-            file_content = f.read()
-            # If the file contains the word "hello" label it as true
-            if file_content.find("hello") != -1:
-                return "True"
-            else:
-                return "False"
+        with open(file_path, encoding="utf8") as f:
+            while True:
+                chunk = f.read(chunk_size)
+                if not chunk: break
+                print(ner(chunk))
+            # if file_content.find("hello") != -1:
+            #     return "True"
+            # else:
+            #     return "False"
     else:
         # If it is not a `.txt` file the set the label to "review"
         return "review"
@@ -55,7 +86,8 @@ def main():
         labels = {}
 
         # Loop over all items in the file directory
-        for file_name in os.listdir(file_dir_path):
+        for i, file_name in enumerate(os.listdir(file_dir_path)):
+            print(f'Processing ({i + 1}/{len(os.listdir(file_dir_path))}): {file_name}')
             file_path = file_dir_path / file_name
             labels[file_name] = classifier(file_path)
 
@@ -65,35 +97,38 @@ def main():
         print("Please place the files in the corresponding folder")
 
 
-def test():
-    import spacy
-    import re
-
+def ner___(text):
     nlp = spacy.load("en_core_web_sm")
 
     patterns = {
-        'email': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
-        'phone': r'(?:(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',
-        'iban': r'\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b',
-        'gender': r'\b(male|female)\b',
-        'rsa_private_key': r'-----BEGIN RSA PRIVATE KEY-----[\s\S]+?-----END RSA PRIVATE KEY-----'
+        'EMAIL': r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}\b',
+        'PHONE': r'(?:(?:\+\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})',
+        'IBAN': r'\b[A-Z]{2}\d{2}[A-Z0-9]{1,30}\b',
+        'GENDER': r'\b(male|female)\b',
+        'RSA_PRIVATE_KEY': r'-----BEGIN RSA PRIVATE KEY-----[\s\S]+?-----END RSA PRIVATE KEY-----'
     }
 
-    text = 'Please contact support@example.com for assistance.'
-    text = 'John,Doe,John Doe,john.doe@gmail.com,Apple Inc.,CH0214047068029644243,42nd street NYC USA,+36(12)1234567,American,male,45,software engineer'
+    # text = 'Please contact support@example.com for assistance.'
+    # text = 'John,Doe,John Doe,john.doe@gmail.com,Apple Inc.,CH0214047068029644243,42nd street NYC USA,+36(12)1234567,American,male,45,software engineer'
     doc = nlp(text)
 
-    for tag, pattern in patterns.items():
-        for match in re.finditer(pattern, text):
-            start_index = match.start()
-            end_index = match.end()
-            matched_text = match.group()
-            print(matched_text, start_index, end_index, tag)
+    identified_labels = set([ent.label_ for ent in doc.ents])
 
-    for ent in doc.ents:
-        print(ent.text, ent.start_char, ent.end_char, ent.label_)
+    # for ent in doc.ents:
+    #     print(ent.text, ent.start_char, ent.end_char, ent.label_)
+
+    for tag, pattern in patterns.items():
+        if len(re.findall(pattern, text)) != 0:
+            identified_labels.add(tag)
+
+        # for match in re.finditer(pattern, text):
+        #     start_index = match.start()
+        #     end_index = match.end()
+        #     matched_text = match.group()
+        #     print(matched_text, start_index, end_index, tag)
+
+    print(identified_labels)
 
 
 if __name__ == "__main__":
-    test()
     main()
