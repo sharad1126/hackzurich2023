@@ -2,9 +2,10 @@ import os
 import sys
 from docx import Document
 import fitz  # PyMuPDF
-#import extract_msg
+import extract_msg
 from pathlib import Path
 from shutil import copyfile
+from extract_msg import Message
 
 
 def remove_non_printable(text: str) -> str:
@@ -17,7 +18,7 @@ def convert_docx_to_txt(input_file: str, output_dir: str):
 
     with open(output_path, "w", encoding="utf-8") as txt_file:
         for paragraph in doc.paragraphs:
-            txt_file.write(remove_non_printable(paragraph.text) + "\n")
+            txt_file.write(remove_non_printable(paragraph.text) + " ")
 
     return output_path
 
@@ -29,7 +30,7 @@ def convert_pdf_to_txt(input_file: str, output_dir: str):
     with open(output_path, "w", encoding="utf-8") as txt_file:
         for page_number in range(doc.page_count):
             page = doc.load_page(page_number)
-            text = page.get_text("block")
+            text = page.get_text()
             txt_file.write(text)
 
     return output_path

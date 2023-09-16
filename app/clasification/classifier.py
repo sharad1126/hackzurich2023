@@ -51,7 +51,7 @@ def save_dict_as_pickle(labels, filename):
 def classifierPub(file_path):
     # Check the data type
         # Open the file to read out the content
-        with open(file_path) as f:
+        with open(file_path, encoding='utf-8', errors='ignore') as f:
             file_content = f.read()
             # findRegex(file_content)
             a = findNames(file_content)
@@ -63,9 +63,9 @@ def classifierPub(file_path):
             return a
             # save_as_csv(names)
 def classifierTXT(file_path):
-    with open(file_path) as f:
+    with open(file_path,encoding='utf-8', errors='ignore') as f:
         file_content = f.read()
-        #a = findNames(file_content)
+        a = findNames(file_content)
         b= containsIBAN(file_content)
         c= containsPhone(file_content)
         d=containsAdress(file_content)
@@ -75,39 +75,27 @@ def classifierTXT(file_path):
             return True
     return False
 def classifierLog(file_path):
-    with open(file_path) as f:
+    with open(file_path, encoding='utf-8', errors='ignore') as f:
         file_content = f.read()
-        a = findNames(file_content)
-        e=containsMails(file_content)
+        a = findNamesStrict(file_content)
+        e = containsMails(file_content)
         b = containsIBAN(file_content)
-
     if e:
-
         c = containsPhone(file_content)
         d = containsAdress(file_content)
         if b or c or d:
             return True
     if a:
-            return True
-    #For md Files
-    f=does_next_word_exist(file_content,'number:')
-    fe=does_next_word_exist(file_content,'#IBAN:')
-    fg = does_next_word_exist(file_content, '#zrnr:')
-    g = does_next_word_exist(file_content, '#Client:')
-    h= does_next_word_exist(file_content, '#Name:')
-    if (f or fe or fg or b) and (g or h):
         return True
-
     return False
 def classifierMd(file_path):
-    with open(file_path) as f:
+    with open(file_path, encoding='utf-8', errors='ignore') as f:
         file_content = f.read()
         a = findNames(file_content)
         e=containsMails(file_content)
         b = containsIBAN(file_content)
 
     if e:
-
         c = containsPhone(file_content)
         d = containsAdress(file_content)
         if b or c or d:
@@ -140,22 +128,60 @@ def findNames(text):
     b = containsIBAN(text)
     c = containsPhone(text)
     d = containsAdress(text)
-
+    e = containsBirthdate(text)
+    f= containsCity(classified_text)
+    i=0
     for i in  range(len(classified_text)-1):
         pos = list(classified_text[i])[1]
         word= list(classified_text[i])[0]
-        if i <len(classified_text) and pos == 'PERSON' and list(classified_text[i+1])[1]=='PERSON':
+        i = i + 1
+        if i <len(classified_text) and pos == 'PERSON' and list(classified_text[i])[1]=='PERSON':
+                emails = getMails(text)
+                for mail in emails:
+                    if findNemesinMail(mail, word):
+                        names.append(word)
+                       # print(mail +' ' +word)
+                if b or c or d or e or f:
+                    names.append(word)
+
+
+    if (len(names) > 0):
+        return True
+    return False
+def findNamesStrict(text):
+    st = StanfordNERTagger(
+        '/Users/janndemond/Downloads/SentiSE-master/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz',
+        '/Users/janndemond/PycharmProjects/hackzurich2023/stanford-ner.jar',
+        encoding='utf-8')
+    tokenized_text = word_tokenize(text)
+    classified_text = st.tag(tokenized_text)
+
+    # Extrahieren der Eigennamen or pos == 'LOCATION'
+    names = []
+    b = containsIBAN(text)
+    c = containsPhone(text)
+    d = containsAdress(text)
+
+    for i in range(len(classified_text)-1):
+        pos = list(classified_text[i])[1]
+        word = list(classified_text[i])[0]
+        i = i + 1
+        if i <len(classified_text) and pos == 'PERSON' and list(classified_text[i])[1]=='PERSON':
                 emails = getMails(text)
                 for mail in emails:
                     if findNemesinMail(mail, word) or b or c or d:
                         names.append(word)
                        # print(mail +' ' +word)
 
-        i=i+1;
     if (len(names) > 1):
         return True
     return False
-
+def containsBirthdate(text):
+    birthdate_pattern = r'\d{4}\-(0?[1-9]|1[012])\-(0?[1-9]|[12][0-9]|3[01])'
+    birthdates = re.findall(birthdate_pattern, text)
+    if (len(birthdates) > 0):
+        return True
+    return False
 def containsMails(text):
     words = word_tokenize(text)
 
@@ -189,6 +215,17 @@ def containsAdress(text):
     # Suchen Sie nach Adressen im Text
     addresses = re.findall(address_pattern, text)
     if (len(addresses) > 0):
+        return True
+    return False
+def containsCity(classified_text):
+    city=[]
+    for i in range(len(classified_text) - 1):
+        pos = list(classified_text[i])[1]
+        word = list(classified_text[i])[0]
+        if pos == 'LOCATION':
+            city.append(word)
+
+    if (len(city) > 1):
         return True
     return False
 def containsPhone(text):

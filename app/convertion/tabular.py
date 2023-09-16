@@ -1,8 +1,11 @@
+
 import openpyxl
 import csv
 import pandas as pd
 import sqlite3
 from pathlib import Path
+from shutil import copyfile
+import sys
  
 def convert_from_excel_to_csv(input_file: str, output_dir: str):
 	read_file = openpyxl.load_workbook(input_file)
@@ -39,22 +42,3 @@ def convert_other_to_csv(input_file: str, output_dir: str):
     output_path = Path(output_dir) / (file_name + ".csv")
     copyfile(input_file, output_path)
 
-def main():
-    if len(sys.argv) != 3:
-        print("Usage: python tabular.py <input_file> <output_dir>")
-        sys.exit(1)
-
-    input_file = sys.argv[1]
-    output_dir = sys.argv[2]
-
-    file_extension = Path(input_file).suffix.lower()
-
-    if file_extension == ".xlsx":
-        convert_from_excel_to_csv(input_file, output_dir)
-    elif file_extension == ".db":
-        convert_from_db_to_csv(input_file, output_dir)
-    else:
-        convert_other_to_csv(input_file, output_dir)
-
-if __name__ == "__main__":
-    main()

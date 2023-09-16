@@ -91,7 +91,11 @@ def preprocess(file_path: str, output_dir: str):
         elif file_extension == ".csv":
             return convert_other_to_csv(file_path, output_dir)
         elif file_extension == ".log":
-            return convert_other_to_txt(file_path, output_dir)
+            return copyfile(file_path, output_dir / os.path.basename(file_path))
+        elif file_extension == ".pub":
+            return copyfile(file_path, output_dir / os.path.basename(file_path))
+        elif file_extension == ".md":
+            return copyfile(file_path, output_dir / os.path.basename(file_path))
     except Exception as e:
         print(f"Could not preprocess {file_path} - {e}")
 
@@ -105,15 +109,25 @@ def classify(script_dir_path):
         file_extension = file_path.suffix
         try:
             if file_extension == ".txt":
-                result = classifierTXT(preprocessed_dir / file_path)
+                result = classifierMd(preprocessed_dir / file_path)
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
-
             elif file_extension == ".pub":
                 result = classifierPub(preprocessed_dir / file_path)
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
-
+            elif file_extension == ".md":
+                result = classifierMd(preprocessed_dir / file_path)
+                validation(os.path.splitext(file_name)[0], result, df)
+                labels[file_path] = result
+            elif file_extension == ".log":
+                result = classifierLog(preprocessed_dir / file_path)
+                validation(os.path.splitext(file_name)[0], result, df)
+                labels[file_path] = result
+            elif file_extension == ".pem":
+                result = True
+                validation(os.path.splitext(file_name)[0], result, df)
+                labels[file_path] = result
         except Exception as e:
             print(f"Could not classify {file_path} - {e}")
 
@@ -134,11 +148,11 @@ def main():
             os.mkdir(preprocessed_dir)
 
         # Loop over all items in the file directory.
-        # Do Preprocessing and save in preprocessed directory
-        # for file_name in os.listdir(file_dir_path):
-        #     # TODO: Check if it does not have an extension
-        #     preprocessed_path = preprocess(file_dir_path / file_name, preprocessed_dir)
-        #     # classifier(preprocessed_path)
+        #Do Preprocessing and save in preprocessed directory
+        #for file_name in os.listdir(file_dir_path):
+            # TODO: Check if it does not have an extension
+            #preprocess(file_dir_path / file_name, preprocessed_dir)
+
 
         # Save the label dictionary as a Pickle file
         #save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
