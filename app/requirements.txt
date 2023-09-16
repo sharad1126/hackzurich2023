@@ -4,3 +4,7 @@ spacy
 python-docx
 pymupdf
 extract-msg
+openpyxl
+csv
+pandas
+sqlite3
