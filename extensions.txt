@@ -12,14 +12,14 @@ img
 mp3
 
 text: 
-docx*
-pdf*
-text*
-md*
-ps1*
-py*
+docx
+pdf
+text
+md
+ps1
+py
 msg
-log*
+log
 
 key:
 pem
