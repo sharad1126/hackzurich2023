@@ -1,0 +1,18 @@
+Processing of the files (core1?):
+	Unzip everything
+	Get the filetyp of the unspecified ones
+	create subdirectorys in processed files/
+	put all the final form files (txt, csv, html, xml) into the processed directory
+	convert all text based files (doxc, pdf, ps1) and add it to processed directory
+	convert media (jpg,png) and add it to processed directory
+	convert xlsx and db to csv and add to processed directory
+
+Analyzing the data (core2?):
+	mark mp3 as review
+	mark pem as true (?)
+	mark pub as false (?)
+	analyse txt first and mark
+	analyse csv and mark
+	analyse html, xml and mark
+	
+(Problem with marking: If we make new files, we have to keep the original filename somewhere, so that we can mark it)
