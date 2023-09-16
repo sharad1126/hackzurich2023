@@ -7,3 +7,4 @@ openpyxl
 pandas
 spacy
 nltk
+python-magic
