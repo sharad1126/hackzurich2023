@@ -2,7 +2,7 @@ cython==3.0.2
 numpy==1.25.2
 spacy
 python-docx
-pymupdf
+PyMuPDF==1.19.4
 extract-msg
 openpyxl
 csv
