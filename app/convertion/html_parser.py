@@ -14,7 +14,7 @@ def containsMails(text):
     return False
 
 def containsAdress(text):
-    address_pattern = r"\w+\s+\w+\s+\d+\n\d{5}\s+\w+\n\w+"
+    address_pattern = r"\w+\s+\w+\s+\d+\n\d{4,5}\s+\w+\n\w+"
 
     addresses = re.findall(address_pattern, text)
     if (len(addresses) > 0):
@@ -52,32 +52,38 @@ def parse_html_files(path):
                     lenght_a = len(soup.find_all('a'))
                     if lenght_p is not None:
                         for a in range(lenght_p):
-                            if re.search('Name',p_tag[a].text):
+                            text_to_check = p_tag[a].text.replace(" ","")
+                            if re.search('Email',text_to_check):
+                                if containsMails(text_to_check):
+                                    print(file_path + ' contains Email')    
+                                    if re.search('Name',text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',text_to_check) or re.search('ddress',text_to_check):
+                                        if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(text_to_check) or containsAdress(text_to_check):
+                                            print(file_path + ' Sensitive')
+                                            break
+                            if re.search('Name',text_to_check):
+                                #if containsName(p_tag[a].text):
                                 print(file_path + ' contains Name')
-                                if re.search('Email',p_tag[a].text) or re.search('IBAN', p_tag[a].text) or re.search('Phone',p_tag[a].text):
-                                    if containsMails(p_tag[a].text) or containsIBAN(p_tag[a].text) or containsPhone(p_tag[a].text):
-                                        print(file_path + ' contains Email IBAN or Phone')
-                                        break
-                            if re.search('Email',p_tag[a].text):
-                                print(file_path + ' contains Email')    
-                                if re.search('Name',p_tag[a].text) or re.search('IBAN', p_tag[a].text) or re.search('Phone',p_tag[a].text):
-                                    if containsMails(p_tag[a].text) or containsIBAN(p_tag[a].text) or containsPhone(p_tag[a].text):
-                                        print(file_path + ' contains Email or IBAN or Phone')
+                                if re.search('Email',text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',text_to_check) or re.search('ddress',text_to_check):
+                                    if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(text_to_check) or containsAdress(text_to_check):
+                                        print(file_path + ' Sensitive')
                                         break
                                     
                     if lenght_a is not None:
                         for a in range(lenght_a):
+                            text_to_check = a_tag[a].text.replace(" ","")
+                            if re.search('mail',text_to_check):
+                                if containsMails(text_to_check):
+                                    print(file_path + ' contains Email')    
+                                    if re.search('Name',text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',text_to_check) or re.search('ddress',text_to_check):
+                                        if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(text_to_check) or containsAdress(text_to_check):
+                                            print(file_path + ' Sensitive')
+                                            break
                             if re.search('Name',a_tag[a].text):
+                                #if containsName(p_tag[a].text):
                                 print(file_path + ' contains Name')
-                                if re.search('Email',a_tag[a].text) or re.search('IBAN', a_tag[a].text) or re.search('Phone',a_tag[a].text):
-                                    if containsMails(a_tag[a].text) or containsIBAN(a_tag[a].text) or containsPhone(a_tag[a].text):
-                                        print(file_path + ' contains Email IBAN or Phone')
+                                if re.search('mail',text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',text_to_check) or re.search('ddress',text_to_check):
+                                    if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(text_to_check) or containsAdress(text_to_check):
+                                        print(file_path + ' Sensitive')
                                         break
-                            if re.search('Email',a_tag[a].text):
-                                print(file_path + ' contains Email')    
-                                if re.search('Name',a_tag[a].text) or re.search('IBAN', a_tag[a].text) or re.search('Phone',a_tag[a].text):
-                                    if containsMails(a_tag[a].text) or containsIBAN(a_tag[a].text) or containsPhone(a_tag[a].text):
-                                        print(file_path + ' contains Email or IBAN or Phone')
-                                        break         
-
+                            
 parse_html_files('/Users/sharadagarwal/Downloads/sample_set/')                    
