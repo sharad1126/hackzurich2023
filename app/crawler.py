@@ -19,12 +19,13 @@ things are satisfied:
 """
 
 import pickle
-from app.ner import ner
+import ner
 from convertion.txt import *
 from convertion.tabular import *
+from clasification.classifier import *
+from clasification.validation import *
 
 chunk_size = 1000000
-
 
 ner_categories = {
     'direct': {'PERSON', 'EMAIL', 'ORG', 'RSA_PRIVATE_KEY'},
@@ -33,23 +34,23 @@ ner_categories = {
 }
 
 
-def classification_rule(labels):
-    sensitive_combinations = [
-        {'RSA_PRIVATE_KEY'},
-        {'PERSON', 'EMAIL'},
-        {'PERSON', 'IBAN'},
-        {'PERSON', 'PHONE'},
-        {'PERSON', 'ADDRESS'},
-        {'EMAIL', 'IBAN'},
-        {'EMAIL', 'ADDRESS'},
-        {'EMAIL', 'PHONE'}
-    ]
-
-    for combination in sensitive_combinations:
-        if combination.issubset(set(labels)):
-            return True
-
-    return False
+# def classification_rule(labels):
+#     sensitive_combinations = [
+#         {'RSA_PRIVATE_KEY'},
+#         {'PERSON', 'EMAIL'},
+#         {'PERSON', 'IBAN'},
+#         {'PERSON', 'PHONE'},
+#         {'PERSON', 'ADDRESS'},
+#         {'EMAIL', 'IBAN'},
+#         {'EMAIL', 'ADDRESS'},
+#         {'EMAIL', 'PHONE'}
+#     ]
+#
+#     for combination in sensitive_combinations:
+#         if combination.issubset(set(labels)):
+#             return True
+#
+#     return False
 
 
 def save_dict_as_pickle(labels, filename):
@@ -57,21 +58,21 @@ def save_dict_as_pickle(labels, filename):
         pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
-def classifier(file_path):
-    with open(file_path, encoding="utf8") as f:
-        while True:
-            chunk = f.read(chunk_size)
-
-            if not chunk:
-                break
-
-            label_tokens = ner(chunk)
-            print(label_tokens)
-            class_out = classification_rule([label for (_, _, _, label) in label_tokens])
-
-            # TODO review
-
-            return "True" if class_out else "False"
+# def classifier(file_path):
+#     with open(file_path, encoding="utf8") as f:
+#         while True:
+#             chunk = f.read(chunk_size)
+#
+#             if not chunk:
+#                 break
+#
+#             label_tokens = ner(chunk)
+#             print(label_tokens)
+#             class_out = classification_rule([label for (_, _, _, label) in label_tokens])
+#
+#             # TODO review
+#
+#             return "True" if class_out else "False"
 
 
 def preprocess(file_path: str, output_dir: str):
@@ -95,11 +96,33 @@ def preprocess(file_path: str, output_dir: str):
         print(f"Could not preprocess {file_path} - {e}")
 
 
+def classify(script_dir_path):
+    preprocessed_dir = script_dir_path / "preprocessed"
+    df = pd.read_csv(script_dir_path / 'results' / 'labels.csv')
+    labels = {}
+    for file_name in os.listdir(preprocessed_dir):
+        file_path = preprocessed_dir / file_name
+        file_extension = file_path.suffix
+        try:
+            if file_extension == ".txt":
+                result = classifierTXT(preprocessed_dir / file_path)
+                validation(os.path.splitext(file_name)[0], result, df)
+                labels[file_path] = result
+
+            elif file_extension == ".pub":
+                result = classifierPub(preprocessed_dir / file_path)
+                validation(os.path.splitext(file_name)[0], result, df)
+                labels[file_path] = result
+
+        except Exception as e:
+            print(f"Could not classify {file_path} - {e}")
+
+
 def main():
     # Get the path of the directory where this script is in
     script_dir_path = Path(os.path.realpath(__file__)).parents[1]
     # Get the path containing the files that we want to label
-    file_dir_path = script_dir_path / "files"
+    file_dir_path = script_dir_path / "sample_set"
 
     if os.path.exists(file_dir_path):
         # Initialize the label dictionary
@@ -112,15 +135,16 @@ def main():
 
         # Loop over all items in the file directory.
         # Do Preprocessing and save in preprocessed directory
-        for file_name in os.listdir(file_dir_path):
-            # TODO: Check if it does not have an extension
-            preprocessed_path = preprocess(file_dir_path / file_name, preprocessed_dir)
-            classifier(preprocessed_path)
+        # for file_name in os.listdir(file_dir_path):
+        #     # TODO: Check if it does not have an extension
+        #     preprocessed_path = preprocess(file_dir_path / file_name, preprocessed_dir)
+        #     # classifier(preprocessed_path)
 
         # Save the label dictionary as a Pickle file
-        save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
+        #save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
+        classify(script_dir_path)
     else:
-        print("Please place the files in the corresponding folder")
+        print("Please place the files in the corresponding folder:" + str(file_dir_path))
 
 
 if __name__ == "__main__":

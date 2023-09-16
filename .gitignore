@@ -4,7 +4,7 @@
 
 # Custom ignores
 crawler_labels.pkl
-
+sample_set/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

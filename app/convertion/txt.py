@@ -2,7 +2,7 @@ import os
 import sys
 from docx import Document
 import fitz  # PyMuPDF
-import extract_msg
+#import extract_msg
 from pathlib import Path
 from shutil import copyfile
 
