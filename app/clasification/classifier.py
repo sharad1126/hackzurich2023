@@ -18,21 +18,16 @@ things are satisfied:
 - Your code cannot the internet during evaluation. Design accordingly.
 """
 
-import pickle
-from nltk.tag import StanfordNERTagger
-import numpy as np
-import xml.etree.ElementTree as ET
-import re
 import os
-from bs4 import BeautifulSoup
-from lxml import etree
-import pandas as pd
+import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from nltk.corpus import names
-from nltk import ne_chunk, pos_tag, word_tokenize
-from nltk.tree import Tree
-import re
+import pandas as pd
+from bs4 import BeautifulSoup
+from lxml import etree
+from nltk import word_tokenize
+from nltk.tag import StanfordNERTagger
 
 
 def classifierPub(file_path):
@@ -46,11 +41,11 @@ def classifierPub(file_path):
             return False
         # findRegex(file_content)
         a = findNames(file_content)
-        if (a == False):
-            return findNamesBylist(file_content)
+        #if (a == False):
+            #return findNamesBylist(file_content)
 
-        if a == False:
-            a = nltkNames(file_content)
+        #if a == False:
+            #a = nltkNames(file_content)
         return a
         # save_as_csv(names)
 
@@ -420,18 +415,18 @@ def containsIBAN(text):
     return False
 
 
-def nltkNames(text):
-    nltk_results = ne_chunk(pos_tag(word_tokenize(text, language='german')))
-    for nltk_result in nltk_results:
-        if type(nltk_result) == Tree:
-            name = ''
-            for nltk_result_leaf in nltk_result.leaves():
-                name += nltk_result_leaf[0] + ' '
-                if nltk_result_leaf.label() == 'PERSON':
-                    print(name + nltk_result.label())
-                    return True
-
-    return False
+# def nltkNames(text):
+#     nltk_results = ne_chunk(pos_tag(word_tokenize(text, language='german')))
+#     for nltk_result in nltk_results:
+#         if type(nltk_result) == Tree:
+#             name = ''
+#             for nltk_result_leaf in nltk_result.leaves():
+#                 name += nltk_result_leaf[0] + ' '
+#                 if nltk_result_leaf.label() == 'PERSON':
+#                     print(name + nltk_result.label())
+#                     return True
+#
+#     return False
 
 
 def findRegex(text):
@@ -452,33 +447,33 @@ def findRegex(text):
     print(re.findall(pattern, text))
 
 
-def findNamesBylist(text):
-    male_names = names.words('male.txt')
-    female_names = names.words('female.txt')
-    all = male_names + female_names;
-    text_a = text.split(';')
-    i = 0
-    if len(text_a) > 2:
-        y = 0
-        for text_b in text_a:
-            y = y + 1
-            text_c = text_b.split(' ')
-            if len(text_c) > 1:
-                for pos_names in text_c:
-
-                    if pos_names in all:
-                        i = i + 1
-
-                    else:
-                        continue
-
-                    if (i > 0):
-                        return True
-            else:
-                if '@' in text_b:
-                    return findNemesinMail(text_b, text_a[y - 2])
-
-    return False
+# def findNamesBylist(text):
+#     male_names = names.words('male.txt')
+#     female_names = names.words('female.txt')
+#     all = male_names + female_names;
+#     text_a = text.split(';')
+#     i = 0
+#     if len(text_a) > 2:
+#         y = 0
+#         for text_b in text_a:
+#             y = y + 1
+#             text_c = text_b.split(' ')
+#             if len(text_c) > 1:
+#                 for pos_names in text_c:
+#
+#                     if pos_names in all:
+#                         i = i + 1
+#
+#                     else:
+#                         continue
+#
+#                     if (i > 0):
+#                         return True
+#             else:
+#                 if '@' in text_b:
+#                     return findNemesinMail(text_b, text_a[y - 2])
+#
+#     return False
 
 
 def isPublishedArticke(text):
