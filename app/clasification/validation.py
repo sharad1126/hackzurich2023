@@ -8,5 +8,5 @@ def validation(file, result, df):
             result_s = df.iloc[index, 1]
             if str(result_s).capitalize() != str(result).capitalize():
                 print(name, 'problem')
-            else:
-                print(name, 'ok')
+            #else:
+                #print(name, 'ok')

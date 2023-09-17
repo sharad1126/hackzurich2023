@@ -98,7 +98,7 @@ def preprocess(file_path: str, output_dir: str):
 
 def classify(script_dir_path):
     preprocessed_dir = script_dir_path / "preprocessed"
-    df = pd.read_csv(script_dir_path / 'results' / 'labels.csv')
+    #df = pd.read_csv(script_dir_path / 'results' / 'labels.csv')
     labels = {}
     for file_name in os.listdir(preprocessed_dir):
         try:
@@ -106,37 +106,37 @@ def classify(script_dir_path):
             file_extension = file_path.suffix
             if file_extension == ".txt":
                 result = classifierMd(preprocessed_dir / file_path)
-                validation(os.path.splitext(file_name)[0], result, df)
+                #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
             elif file_extension == ".pub":
                 result = classifierPub(preprocessed_dir / file_path)
-                validation(os.path.splitext(file_name)[0], result, df)
+                #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
             elif file_extension == ".md":
                 result = classifierMd(preprocessed_dir / file_path)
-                validation(os.path.splitext(file_name)[0], result, df)
+                #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
             elif file_extension == ".log":
                 result = classifierLog(preprocessed_dir / file_path)
-                validation(os.path.splitext(file_name)[0], result, df)
+                #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
             elif file_extension == ".pem":
                 result = classifierTXT(preprocessed_dir / file_path)
-                validation(os.path.splitext(file_name)[0], result, df)
+                #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = True
             elif file_extension == ".mp3":
-                validation(os.path.splitext(file_name)[0], False, df)
+                #validation(os.path.splitext(file_name)[0], False, df)
                 labels[file_path] = False
             elif file_extension == ".zip":
-                validation(os.path.splitext(file_name)[0], False, df)
+                #validation(os.path.splitext(file_name)[0], False, df)
                 labels[file_path] = False
             elif file_extension == ".csv":
                 result = classifierCSV(preprocessed_dir / file_path)
-                validation(os.path.splitext(file_name)[0], result, df)
+                #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
             elif file_extension == ".xml":
                 result = classifierXML(preprocessed_dir / file_path)
-                validation(os.path.splitext(file_name)[0], result, df)
+                #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
         except Exception as e:
             labels[file_path] = 'review'
