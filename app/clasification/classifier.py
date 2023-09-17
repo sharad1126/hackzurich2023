@@ -27,6 +27,7 @@ import os
 from bs4 import BeautifulSoup
 from lxml import etree
 import pandas as pd
+from pathlib import Path
 
 from nltk.corpus import names
 from nltk import ne_chunk, pos_tag, word_tokenize
@@ -268,11 +269,10 @@ def classifierMd(file_path):
 
 
 def findNames(text):
-    cdir = os.getcwd()
-    pdir = os.path.dirname(cdir)
-    st = StanfordNERTagger(
-        pdir+'/english.all.3class.distsim.crf.ser.gz', pdir+'/stanford-ner.jar',
-        encoding='utf-8')
+    cdir = Path(os.path.realpath(__file__)).parents[1]
+    lib = cdir / 'english.all.3class.distsim.crf.ser.gz'
+    jar = cdir / 'stanford-ner.jar'
+    st = StanfordNERTagger(lib, jar, encoding='utf-8')
 
     # text = 'While in France, Christine Lagarde discussed short-term stimulus efforts in a recent interview with the Wall Street Journal.'
 
@@ -307,11 +307,10 @@ def findNames(text):
 
 
 def findNamesStrict(text):
-    cdir = os.getcwd()
-    pdir = os.path.dirname(cdir)
-    st = StanfordNERTagger(
-        pdir+'/english.all.3class.distsim.crf.ser.gz', pdir+'/stanford-ner.jar',
-        encoding='utf-8')
+    cdir = Path(os.path.realpath(__file__)).parents[1]
+    lib=cdir /'english.all.3class.distsim.crf.ser.gz'
+    jar = cdir /'stanford-ner.jar'
+    st = StanfordNERTagger(lib,jar,encoding='utf-8')
     tokenized_text = word_tokenize(text)
     classified_text = st.tag(tokenized_text)
 
