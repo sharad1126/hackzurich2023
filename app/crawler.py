@@ -101,6 +101,7 @@ def classify(script_dir_path):
     df = pd.read_csv(script_dir_path / 'results' / 'labels.csv')
     labels = {}
     for file_name in os.listdir(preprocessed_dir):
+        try:
             file_path = preprocessed_dir / file_name
             file_extension = file_path.suffix
             if file_extension == ".txt":
@@ -137,6 +138,9 @@ def classify(script_dir_path):
                 result = classifierXML(preprocessed_dir / file_path)
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
+        except Exception as e:
+            labels[file_path] = 'review'
+            pass
     save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
 
 
