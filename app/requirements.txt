@@ -8,3 +8,5 @@ pandas
 spacy
 nltk
 python-magic
+pytesseract
+Pillow
