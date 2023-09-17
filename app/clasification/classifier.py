@@ -79,14 +79,14 @@ def classifierLog(file_path):
         a = findNamesStrict(file_content)
         e = containsMails(file_content)
         b = containsIBAN(file_content)
-    if e:
-        c = containsPhone(file_content)
-        d = containsAdress(file_content)
-        if b or c or d:
+        if e:
+            c = containsPhone(file_content)
+            d = containsAdress(file_content)
+            if b or c or d:
+                return True
+        if a:
             return True
-    if a:
-        return True
-    return False
+        return False
 
 def classifierXML(f):
     parser = etree.XMLParser(recover=True)
@@ -224,7 +224,7 @@ def classifierCSV(file_path):
         s = row.to_string(index=False)
         if findNames(s):
             return True
-        if index>100:
+        if index>20:
             return False
     return False
 def containsRSA(text):
@@ -236,38 +236,39 @@ def containsRSA(text):
 
 def classifierMd(file_path):
     with open(file_path, encoding='utf-8', errors='ignore') as f:
-     file_content = f.read()
-    if containsRSA(file_content):
-        return True
-    if (isPublishedArticke(file_content)):
-        return False
-    a = findNames(file_content)
-    e = containsMails(file_content)
-    b = containsIBAN(file_content)
-
-    if e:
-        c = containsPhone(file_content)
-        d = containsAdress(file_content)
-        if b or c or d:
+        file_content = f.read()
+        if containsRSA(file_content):
             return True
-    if a:
-        return True
-    # For md Files
-    f = does_next_word_exist(file_content, 'number:')
-    fe = does_next_word_exist(file_content, '#IBAN:')
-    fg = does_next_word_exist(file_content, '#zrnr:')
-    g = does_next_word_exist(file_content, '#Client:')
-    h = does_next_word_exist(file_content, '#Name:')
-    if (f or fe or fg or b) and (g or h):
-        return True
+        if (isPublishedArticke(file_content)):
+            return False
+        a = findNames(file_content)
+        e = containsMails(file_content)
+        b = containsIBAN(file_content)
+
+        if e:
+            c = containsPhone(file_content)
+            d = containsAdress(file_content)
+            if b or c or d:
+                return True
+        if a:
+            return True
+        # For md Files
+        f = does_next_word_exist(file_content, 'number:')
+        fe = does_next_word_exist(file_content, '#IBAN:')
+        fg = does_next_word_exist(file_content, '#zrnr:')
+        g = does_next_word_exist(file_content, '#Client:')
+        h = does_next_word_exist(file_content, '#Name:')
+        if (f or fe or fg or b) and (g or h):
+            return True
     return False
 
 
 def findNames(text):
     cdir = Path(os.path.realpath(__file__)).parents[1]
-    lib = cdir / 'english.all.3class.distsim.crf.ser.gz'
-    jar = cdir / 'stanford-ner.jar'
-    st = StanfordNERTagger(lib, jar, encoding='utf-8')
+    lib =str(cdir) + '/english.all.3class.distsim.crf.ser.gz'
+    jar = str(cdir) + '/stanford-ner.jar'
+    os.environ['CLASSPATH'] = jar
+    st = StanfordNERTagger(lib)
 
     # text = 'While in France, Christine Lagarde discussed short-term stimulus efforts in a recent interview with the Wall Street Journal.'
 
@@ -303,9 +304,10 @@ def findNames(text):
 
 def findNamesStrict(text):
     cdir = Path(os.path.realpath(__file__)).parents[1]
-    lib=cdir /'english.all.3class.distsim.crf.ser.gz'
-    jar = cdir /'stanford-ner.jar'
-    st = StanfordNERTagger(lib,jar,encoding='utf-8')
+    lib = str(cdir) + '/english.all.3class.distsim.crf.ser.gz'
+    jar = str(cdir) + '/stanford-ner.jar'
+    os.environ['CLASSPATH'] = jar
+    st = StanfordNERTagger(lib)
     tokenized_text = word_tokenize(text)
     classified_text = st.tag(tokenized_text)
 

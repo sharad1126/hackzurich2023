@@ -19,7 +19,6 @@ things are satisfied:
 """
 
 import pickle
-import ner
 from convertion.txt import *
 from convertion.tabular import *
 from clasification.classifier import *
@@ -102,9 +101,8 @@ def classify(script_dir_path):
     df = pd.read_csv(script_dir_path / 'results' / 'labels.csv')
     labels = {}
     for file_name in os.listdir(preprocessed_dir):
-        file_path = preprocessed_dir / file_name
-        file_extension = file_path.suffix
-        try:
+            file_path = preprocessed_dir / file_name
+            file_extension = file_path.suffix
             if file_extension == ".txt":
                 result = classifierMd(preprocessed_dir / file_path)
                 validation(os.path.splitext(file_name)[0], result, df)
@@ -139,10 +137,6 @@ def classify(script_dir_path):
                 result = classifierXML(preprocessed_dir / file_path)
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
-        except Exception as e:
-            print(e)
-            labels[file_path] = 'Review'
-            continue
     save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
 
 
@@ -166,9 +160,9 @@ def main():
         #get_extensions(file_dir_path)
         # Loop over all items in the file directory.
         #Do Preprocessing and save in preprocessed directory
-        for file_name in os.listdir(file_dir_path):
+        #for file_name in os.listdir(file_dir_path):
             # TODO: Check if it does not have an extension
-            preprocess(file_dir_path / file_name, preprocessed_dir)
+            #preprocess(file_dir_path / file_name, preprocessed_dir)
 
 
         # Save the label dictionary as a Pickle file
