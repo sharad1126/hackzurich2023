@@ -228,9 +228,7 @@ def classifierCSV(file_path):
             return False
     return False
 def containsRSA(text):
-    private_key_pattern = re.compile(r'-----BEGIN RSA PRIVATE KEY-----\n(.*?)\n-----END RSA PRIVATE KEY-----',re.DOTALL)
-    rsa = re.findall(private_key_pattern, text)
-    if (len(rsa) > 0):
+    if re.search('BEGIN RSA PRIVATE KEY', text):
         return True
     return False
 

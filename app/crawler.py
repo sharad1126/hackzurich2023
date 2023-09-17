@@ -53,7 +53,7 @@ def preprocess(file_path: str, output_dir: str):
         elif file_extension == ".xlsx":
             return convert_from_excel_to_csv(file_path, output_dir)
         elif file_extension == ".db":
-            return convert_from_db_to_csv(file_path, output_dir)
+            return convert_from_db_to_csv(str(file_path), output_dir)
         elif file_extension == ".csv":
             return convert_other_to_csv(file_path, output_dir)
         elif file_extension == ".log":
@@ -72,10 +72,10 @@ def preprocess(file_path: str, output_dir: str):
             # convert image to text
             text_from_image = pytesseract.image_to_string(Image.open(file_path))
             # join the paths, to the place where new files should be stored
-            image_text_path = output_dir / os.path.basename(file_path)+ ".txt"
+            image_text_path = output_dir / os.path.basename(file_path)
             # print(image_text_path)
             # create the new file
-            t = open(image_text_path, "w+")
+            t = open(str(image_text_path)+'.txt', "w+")
             # write in the new file
             t.write(text_from_image)
             # close the file
