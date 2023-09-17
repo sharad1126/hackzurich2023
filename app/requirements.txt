@@ -1,6 +1,6 @@
 cython==3.0.2   
 numpy==1.25.2
-PyMuPDF==1.19.4
+PyMuPDF
 python-docx
 extract-msg
 openpyxl
