@@ -43,6 +43,4 @@ def get_extensions(input_dir: str):
                             extension = '.zip'
                         else:
                             extension = '.txt'       
-                        os.rename(file_path, file_path+extension)           
-
-get_extensions('/Users/sharadagarwal/Downloads/sample_set/')                        
+                        os.rename(file_path, file_path+extension)

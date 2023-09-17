@@ -24,6 +24,10 @@ from convertion.txt import *
 from convertion.tabular import *
 from clasification.classifier import *
 from clasification.validation import *
+from convertion.get_missing_extensions import *
+from zipfile import ZipFile
+from PIL import Image
+import pytesseract
 
 chunk_size = 1000000
 
@@ -33,46 +37,9 @@ ner_categories = {
     'potential_indirect': {'GENDER'}
 }
 
-
-# def classification_rule(labels):
-#     sensitive_combinations = [
-#         {'RSA_PRIVATE_KEY'},
-#         {'PERSON', 'EMAIL'},
-#         {'PERSON', 'IBAN'},
-#         {'PERSON', 'PHONE'},
-#         {'PERSON', 'ADDRESS'},
-#         {'EMAIL', 'IBAN'},
-#         {'EMAIL', 'ADDRESS'},
-#         {'EMAIL', 'PHONE'}
-#     ]
-#
-#     for combination in sensitive_combinations:
-#         if combination.issubset(set(labels)):
-#             return True
-#
-#     return False
-
-
 def save_dict_as_pickle(labels, filename):
     with open(filename, "wb") as handle:
         pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-# def classifier(file_path):
-#     with open(file_path, encoding="utf8") as f:
-#         while True:
-#             chunk = f.read(chunk_size)
-#
-#             if not chunk:
-#                 break
-#
-#             label_tokens = ner(chunk)
-#             print(label_tokens)
-#             class_out = classification_rule([label for (_, _, _, label) in label_tokens])
-#
-#             # TODO review
-#
-#             return "True" if class_out else "False"
 
 
 def preprocess(file_path: str, output_dir: str):
@@ -100,8 +67,34 @@ def preprocess(file_path: str, output_dir: str):
             return copyfile(file_path, output_dir / os.path.basename(file_path))
         elif file_extension == ".pem":
             return copyfile(file_path, output_dir / os.path.basename(file_path))
+        elif file_extension == ".xml":
+            return copyfile(file_path, output_dir / os.path.basename(file_path))
+        elif file_extension == ".png" or file_extension == ".jpg":
+            # convert image to text
+            text_from_image = pytesseract.image_to_string(Image.open(file_path))
+            # join the paths, to the place where new files should be stored
+            image_text_path = output_dir / os.path.basename(file_path)+ ".txt"
+            # print(image_text_path)
+            # create the new file
+            t = open(image_text_path, "w+")
+            # write in the new file
+            t.write(text_from_image)
+            # close the file
+            t.close()
+        if file_extension == ".zip":
+            with ZipFile(file_path, 'r') as z:
+                # extract in current directory
+                try:
+                    # has to be changed so that it is not in a folder
+                    z.extractall(output_dir+'_zip' + "\\" +  os.path.basename(file_path))
+                    preprocess(output_dir+'_zip' + "\\" +  os.path.basename(file_path))
+                    # z.extractall()
+                except:
+                    return copyfile(file_path, output_dir / os.path.basename(file_path))
+                    print("fail")  # here we should flag, since it is encrypted
     except Exception as e:
         print(f"Could not preprocess {file_path} - {e}")
+        pass
 
 
 def classify(script_dir_path):
@@ -129,19 +122,31 @@ def classify(script_dir_path):
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
             elif file_extension == ".pem":
-                validation(os.path.splitext(file_name)[0], True, df)
+                result = classifierTXT(preprocessed_dir / file_path)
+                validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = True
             elif file_extension == ".mp3":
+                validation(os.path.splitext(file_name)[0], False, df)
+                labels[file_path] = False
+            elif file_extension == ".zip":
                 validation(os.path.splitext(file_name)[0], False, df)
                 labels[file_path] = False
             elif file_extension == ".csv":
                 result = classifierCSV(preprocessed_dir / file_path)
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
-
-
+            elif file_extension == ".xml":
+                result = classifierXML(preprocessed_dir / file_path)
+                validation(os.path.splitext(file_name)[0], result, df)
+                labels[file_path] = result
         except Exception as e:
-            print(f"Could not classify {file_path} - {e}")
+            labels[file_path] = 'Review'
+            continue
+    save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
+
+
+
+
 
 
 def main():
@@ -151,19 +156,18 @@ def main():
     file_dir_path = script_dir_path / "sample_set"
 
     if os.path.exists(file_dir_path):
-        # Initialize the label dictionary
         labels = {}
-
         # Create new directory for preproccesed files if it does not exist
         preprocessed_dir = script_dir_path / "preprocessed"
         if not os.path.exists(preprocessed_dir):
             os.mkdir(preprocessed_dir)
 
+        get_extensions(file_dir_path)
         # Loop over all items in the file directory.
         #Do Preprocessing and save in preprocessed directory
-        #for file_name in os.listdir(file_dir_path):
+        for file_name in os.listdir(file_dir_path):
             # TODO: Check if it does not have an extension
-            #preprocess(file_dir_path / file_name, preprocessed_dir)
+            preprocess(file_dir_path / file_name, preprocessed_dir)
 
 
         # Save the label dictionary as a Pickle file

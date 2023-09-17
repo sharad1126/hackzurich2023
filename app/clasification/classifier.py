@@ -21,6 +21,11 @@ things are satisfied:
 import pickle
 from nltk.tag import StanfordNERTagger
 import numpy as np
+import xml.etree.ElementTree as ET
+import re
+import os
+from bs4 import BeautifulSoup
+from lxml import etree
 import pandas as pd
 
 from nltk.corpus import names
@@ -29,23 +34,15 @@ from nltk.tree import Tree
 import re
 
 
-def save_as_csv(data):
-    array = np.array(data)
-
-    # Speichern des Arrays als CSV-Datei
-    np.savetxt('names.csv', array, delimiter=',')
-
-
-def save_dict_as_pickle(labels, filename):
-    with open(filename, "wb") as handle:
-        pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
 def classifierPub(file_path):
     # Check the data type
     # Open the file to read out the content
     with open(file_path, encoding='utf-8', errors='ignore') as f:
         file_content = f.read()
+        if containsRSA(file_content):
+            return True
+        if (isPublishedArticke(file_content)):
+            return False
         # findRegex(file_content)
         a = findNames(file_content)
         if (a == False):
@@ -60,6 +57,8 @@ def classifierPub(file_path):
 def classifierTXT(file_path):
     with open(file_path, encoding='utf-8', errors='ignore') as f:
         file_content = f.read()
+        if containsRSA(file_content):
+            return True
         if (isPublishedArticke(file_content)):
             return False
 
@@ -77,6 +76,8 @@ def classifierTXT(file_path):
 def classifierLog(file_path):
     with open(file_path, encoding='utf-8', errors='ignore') as f:
         file_content = f.read()
+        if containsRSA(file_content):
+            return True
         if (isPublishedArticke(file_content)):
             return False
         a = findNamesStrict(file_content)
@@ -91,7 +92,122 @@ def classifierLog(file_path):
         return True
     return False
 
+def classifierXML(f):
+    parser = etree.XMLParser(recover=True)
+    with open(f, 'r', encoding='unicode_escape') as file:
+        xml_content = file.read()
+    # tree = ET.parse(xml_content, parser=parser)
+    # root = tree.getroot()
+    root_node = ET.fromstring(xml_content)
+    # root_node = ET.parse(f).getroot()
 
+    for k in range(len(root_node)):
+        c = 0
+        mail = False
+        iban = False
+        address = False
+        phone = False
+        for x in root_node[k]:
+            tags = []
+            name =''
+            values = []
+            tags.append(x.tag)
+            values.append(x.text)
+            for tag in tags:
+                if re.search('name', tag):
+                    x = tags.index(tag)
+                    if values[x]:
+                        name =name +' '+ values[x]
+                        if findNames(name):
+                            c =  2
+                if re.search('mail', tag):
+                    y = tags.index(tag)
+                    if values[y]:
+                        if containsMails(values[y]):
+                            # print('mail:' + values[y])
+                            mail = True
+                if re.search('iban', tag) or re.search('IBAN', tag):
+                    z = tags.index(tag)
+                    if values[z]:
+                        if containsIBAN(values[z]):
+                            # print('iban: ' + values[z])
+                            iban = True
+                if re.search('phone', tag):
+                    b = tags.index(tag)
+                    if values[b]:
+                        if containsPhone(values[b]):
+                            # print('phone: ' + values[b])
+                            phone = True
+                if re.search('ddress', tag):
+                    a = tags.index(tag)
+                    if values[a]:
+                        if containsAdress(values[a]):
+                            # print('address: ' + values[a])
+                            address = True
+        if (((c == 2) and (mail or iban or phone or address)) or (mail and (iban or address or phone))):
+            #print('sensitive ' + f)
+            return True
+            break
+    return False
+
+def classifierHTML(file_path):
+    with open(file_path) as f:
+        soup = BeautifulSoup(f, 'html.parser')
+        p_tag = soup.findAll('p')
+        lenght_p = len(soup.find_all('p'))
+        a_tag = soup.find_all('a')
+        lenght_a = len(soup.find_all('a'))
+        if lenght_p is not None:
+            for a in range(lenght_p):
+                text_to_check = p_tag[a].text.replace(" ", "")
+                if re.search('Email', text_to_check):
+                    if containsMails(text_to_check):
+                        #print(file_path + ' contains Email')
+                        if re.search('Name', text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',
+                                                                                                             text_to_check) or re.search(
+                                'ddress', text_to_check):
+                            if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(
+                                    text_to_check) or containsAdress(text_to_check):
+                                #print(file_path + ' Sensitive')
+                                return True
+                                break
+                if re.search('Name', text_to_check):
+                    if findNames(p_tag[a].text):
+                    #print(file_path + ' contains Name')
+                        if re.search('Email', text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',
+                                                                                                              text_to_check) or re.search(
+                                'ddress', text_to_check):
+                            if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(
+                                    text_to_check) or containsAdress(text_to_check):
+                                #print(file_path + ' Sensitive')
+                                return True
+                                break
+
+        if lenght_a is not None:
+            for a in range(lenght_a):
+                text_to_check = a_tag[a].text.replace(" ", "")
+                if re.search('mail', text_to_check):
+                    if containsMails(text_to_check):
+                        #print(file_path + ' contains Email')
+                        if re.search('Name', text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',
+                                                                                                             text_to_check) or re.search(
+                                'ddress', text_to_check):
+                            if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(
+                                    text_to_check) or containsAdress(text_to_check):
+                                #print(file_path + ' Sensitive')
+                                return True
+                                break
+                if re.search('Name', a_tag[a].text):
+                    if findNames(p_tag[a].text):
+                        #print(file_path + ' contains Name')
+                        if re.search('mail', text_to_check) or re.search('IBAN', text_to_check) or re.search('Phone',
+                                                                                                         text_to_check) or re.search(
+                            'ddress', text_to_check):
+                            if containsMails(text_to_check) or containsIBAN(text_to_check) or containsPhone(
+                                text_to_check) or containsAdress(text_to_check):
+                                #print(file_path + ' Sensitive')
+                                return True
+                                break
 def classifierCSV(file_path):
     dataframe = pd.read_csv(file_path)
     z = False
@@ -117,10 +233,16 @@ def classifierCSV(file_path):
     return False
 def containsRSA(text):
     private_key_pattern = re.compile(r'-----BEGIN RSA PRIVATE KEY-----\n(.*?)\n-----END RSA PRIVATE KEY-----',re.DOTALL)
+    rsa = re.findall(private_key_pattern, text)
+    if (len(rsa) > 0):
+        return True
+    return False
 
 def classifierMd(file_path):
     with open(file_path, encoding='utf-8', errors='ignore') as f:
-        file_content = f.read()
+     file_content = f.read()
+    if containsRSA(file_content):
+        return True
     if (isPublishedArticke(file_content)):
         return False
     a = findNames(file_content)
@@ -147,8 +269,8 @@ def classifierMd(file_path):
 
 def findNames(text):
     st = StanfordNERTagger(
-        '/Users/janndemond/Downloads/SentiSE-master/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz',
-        '/Users/janndemond/PycharmProjects/hackzurich2023/stanford-ner.jar',
+        '../english.all.3class.distsim.crf.ser.gz',
+        '../stanford-ner.jar',
         encoding='utf-8')
 
     # text = 'While in France, Christine Lagarde discussed short-term stimulus efforts in a recent interview with the Wall Street Journal.'
@@ -185,8 +307,8 @@ def findNames(text):
 
 def findNamesStrict(text):
     st = StanfordNERTagger(
-        '/Users/janndemond/Downloads/SentiSE-master/edu/stanford/nlp/models/ner/english.all.3class.distsim.crf.ser.gz',
-        '/Users/janndemond/PycharmProjects/hackzurich2023/stanford-ner.jar',
+        '../english.all.3class.distsim.crf.ser.gz',
+        '../stanford-ner.jar',
         encoding='utf-8')
     tokenized_text = word_tokenize(text)
     classified_text = st.tag(tokenized_text)
