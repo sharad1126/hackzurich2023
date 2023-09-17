@@ -96,6 +96,10 @@ def preprocess(file_path: str, output_dir: str):
             return copyfile(file_path, output_dir / os.path.basename(file_path))
         elif file_extension == ".md":
             return copyfile(file_path, output_dir / os.path.basename(file_path))
+        elif file_extension == ".mp3":
+            return copyfile(file_path, output_dir / os.path.basename(file_path))
+        elif file_extension == ".pem":
+            return copyfile(file_path, output_dir / os.path.basename(file_path))
     except Exception as e:
         print(f"Could not preprocess {file_path} - {e}")
 
@@ -125,9 +129,17 @@ def classify(script_dir_path):
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
             elif file_extension == ".pem":
-                result = True
+                validation(os.path.splitext(file_name)[0], True, df)
+                labels[file_path] = True
+            elif file_extension == ".mp3":
+                validation(os.path.splitext(file_name)[0], False, df)
+                labels[file_path] = False
+            elif file_extension == ".csv":
+                result = classifierCSV(preprocessed_dir / file_path)
                 validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
+
+
         except Exception as e:
             print(f"Could not classify {file_path} - {e}")
 
