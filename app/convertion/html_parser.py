@@ -86,4 +86,4 @@ def parse_html_files(path):
                                         print(file_path + ' Sensitive')
                                         break
                             
-parse_html_files('/Users/sharadagarwal/Downloads/sample_set/')                    
+parse_html_files('/Users/sharadagarwal/Downloads/files/')

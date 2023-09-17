@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import re
 from more_itertools import locate
 
-root_node = ET.parse('/Users/sharadagarwal/Downloads/sample_set/within-resource.xml').getroot()
+root_node = ET.parse('/Users/sharadagarwal/Downloads/files/within-resource.xml').getroot()
 
 for k in range(len(root_node)):
 	c = 0
