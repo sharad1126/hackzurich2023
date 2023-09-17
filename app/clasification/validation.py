@@ -6,7 +6,10 @@ def validation(file, result, df):
         splitName = name.split('.')[0];
         if splitName == file:
             result_s = df.iloc[index, 1]
+            df.iloc[index, 2]=str(result)
             if str(result_s).capitalize() != str(result).capitalize():
                 print(name, 'problem')
-            #else:
-                #print(name, 'ok')
+                df.iloc[index, 3]='problem'
+            else:
+                df.iloc[index, 3] = 'ok'
+                print(name, 'ok')

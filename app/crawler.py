@@ -80,7 +80,7 @@ def preprocess(file_path: str, output_dir: str):
             t.write(text_from_image)
             # close the file
             t.close()
-        if file_extension == ".zip":
+        elif file_extension == ".zip":
             with ZipFile(file_path, 'r') as z:
                 # extract in current directory
                 try:
@@ -91,6 +91,8 @@ def preprocess(file_path: str, output_dir: str):
                 except:
                     return copyfile(file_path, output_dir / os.path.basename(file_path))
                     print("fail")  # here we should flag, since it is encrypted
+        else:
+            return copyfile(file_path, output_dir / os.path.basename(file_path))
     except Exception as e:
         print(f"Could not preprocess {file_path} - {e}")
         pass
@@ -138,9 +140,16 @@ def classify(script_dir_path):
                 result = classifierXML(preprocessed_dir / file_path)
                 #validation(os.path.splitext(file_name)[0], result, df)
                 labels[file_path] = result
+            else:
+                result = classifierMd(preprocessed_dir / file_path)
+                #validation(os.path.splitext(file_name)[0], result, df)
+                labels[file_path] = result
         except Exception as e:
             labels[file_path] = 'review'
             pass
+    print(len(labels))
+    #print(df)
+
     save_dict_as_pickle(labels, script_dir_path / 'results' / 'crawler_labels.pkl')
 
 
