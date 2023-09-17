@@ -10,3 +10,4 @@ nltk
 python-magic
 pytesseract
 Pillow
+beautifulsoup4

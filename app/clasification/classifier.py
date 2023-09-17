@@ -268,9 +268,10 @@ def classifierMd(file_path):
 
 
 def findNames(text):
+    cdir = os.getcwd()
+    pdir = os.path.dirname(cdir)
     st = StanfordNERTagger(
-        '../english.all.3class.distsim.crf.ser.gz',
-        '../stanford-ner.jar',
+        pdir+'/english.all.3class.distsim.crf.ser.gz', pdir+'/stanford-ner.jar',
         encoding='utf-8')
 
     # text = 'While in France, Christine Lagarde discussed short-term stimulus efforts in a recent interview with the Wall Street Journal.'
@@ -306,9 +307,10 @@ def findNames(text):
 
 
 def findNamesStrict(text):
+    cdir = os.getcwd()
+    pdir = os.path.dirname(cdir)
     st = StanfordNERTagger(
-        '../english.all.3class.distsim.crf.ser.gz',
-        '../stanford-ner.jar',
+        pdir+'/english.all.3class.distsim.crf.ser.gz', pdir+'/stanford-ner.jar',
         encoding='utf-8')
     tokenized_text = word_tokenize(text)
     classified_text = st.tag(tokenized_text)
