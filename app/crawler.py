@@ -24,7 +24,7 @@ from convertion.txt import *
 from convertion.tabular import *
 from clasification.classifier import *
 from clasification.validation import *
-from convertion.get_missing_extensions import *
+#from convertion.get_missing_extensions import *
 from zipfile import ZipFile
 from PIL import Image
 import pytesseract
@@ -154,7 +154,7 @@ def main():
     # Get the path of the directory where this script is in
     script_dir_path = Path(os.path.realpath(__file__)).parents[1]
     # Get the path containing the files that we want to label
-    file_dir_path = script_dir_path / "sample_set"
+    file_dir_path = script_dir_path / "files"
 
     if os.path.exists(file_dir_path):
         labels = {}
@@ -163,7 +163,7 @@ def main():
         if not os.path.exists(preprocessed_dir):
             os.mkdir(preprocessed_dir)
 
-        get_extensions(file_dir_path)
+        #get_extensions(file_dir_path)
         # Loop over all items in the file directory.
         #Do Preprocessing and save in preprocessed directory
         for file_name in os.listdir(file_dir_path):
